@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+
+import 'package:ecommerce_app/screens/login_screen.dart';
 
 void main() async {
   WidgetsBinding widgetsBinding =  WidgetsFlutterBinding.ensureInitialized();
@@ -29,14 +30,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.deepPurple,
       ),
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text('My E-Commerce App'),
-        ),
-        body: Center(
-          child: Text('Firebase is Connected!')
-        ),
-      ),
+      home: const LoginScreen(),
     );
   }
 }
