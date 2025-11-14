@@ -7,6 +7,7 @@ import 'package:ecommerce_app/widgets/product_card.dart';
 import 'package:ecommerce_app/screens/product_detail_screen.dart'; // 1. ADD THIS IMPORT
 import 'package:ecommerce_app/providers/cart_provider.dart'; // 1. ADD THIS
 import 'package:ecommerce_app/screens/cart_screen.dart'; // 2. ADD THIS
+import 'package:ecommerce_app/screens/order_history_screen.dart'; // 1. ADD THIS
 import 'package:provider/provider.dart'; // 3. ADD THIS
 
 // Part 2: Widget Definition
@@ -98,11 +99,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               );
             },
-          ),
+           ),
 
-          // 2. --- THIS IS THE MAGIC ---
-          //    This is a "collection-if". The IconButton will only
-          //    be built IF _userRole is equal to 'admin'.
+           // 2. --- ADD THIS NEW BUTTON ---
+           IconButton(
+             icon: const Icon(Icons.receipt_long), // A "receipt" icon
+             tooltip: 'My Orders',
+             onPressed: () {
+               Navigator.of(context).push(
+                 MaterialPageRoute(
+                   builder: (context) => const OrderHistoryScreen(),
+                 ),
+               );
+             },
+           ),
+
+           // 3. --- THIS IS THE MAGIC ---
+           //    This is a "collection-if". The IconButton will only
+           //    be built IF _userRole is equal to 'admin'.
           if (_userRole == 'admin')
             IconButton(
               icon: const Icon(Icons.admin_panel_settings),
