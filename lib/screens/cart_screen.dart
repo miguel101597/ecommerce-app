@@ -69,26 +69,67 @@ class _CartScreenState extends State<CartScreen> {
                   ),
           ),
 
-          // 8. The Total Price Summary
+          // 3. --- THIS IS THE NEW PRICE BREAKDOWN CARD ---
           Card(
             margin: const EdgeInsets.all(16),
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column( // 4. Use a Column for multiple rows
                 children: [
-                  const Text(
-                    'Total:',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+
+                  // 5. ROW 1: Subtotal
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Subtotal:',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      Text(
+                        '₱${cart.subtotal.toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ],
                   ),
-                  Text(
-                    '₱${cart.totalPrice.toStringAsFixed(2)}',
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+
+                  const SizedBox(height: 8),
+
+                  // 6. ROW 2: VAT
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'VAT (12%):',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      Text(
+                        '₱${cart.vat.toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ],
+                  ),
+
+                  const Divider(height: 20, thickness: 1),
+
+                  // 7. ROW 3: Total
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Total:',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        '₱${cart.totalPriceWithVat.toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.deepPurple),
+                      ),
+                    ],
                   ),
                 ],
               ),
-           ),
+            ),
           ),
+          // --- END OF NEW CARD ---
 
             // 4. --- ADD THIS NEW BUTTON ---
             Padding(
