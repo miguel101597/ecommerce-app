@@ -1,5 +1,6 @@
 import 'package:ecommerce_app/screens/signup_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 // 1. Create a StatefulWidget
 class LoginScreen extends StatefulWidget {
@@ -15,6 +16,12 @@ class _LoginScreenState extends State<LoginScreen> {
   // 3. Create a GlobalKey for the Form
   final _formKey = GlobalKey<FormState>();
 
+  // 2. Add a loading state variable
+  bool _isLoading = false;
+
+  // 3. Get an instance of FirebaseAuth
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   // 4. Create TextEditingControllers
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -25,6 +32,56 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _login() async {
+    // 1. Check if the form is valid
+    if (!_formKey.currentState!.validate()) {
+      return; // If not valid, stop here
+    }
+
+    // 2. Set loading to true
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // 3. This is the Firebase command to sign in
+      await _auth.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+      
+      // 4. If login is successful, the AuthWrapper's stream
+      //    will auto-navigate to HomeScreen. We don't need to do it here.
+
+    } on FirebaseAuthException catch (e) {
+      // 5. This 'catch' block handles Firebase-specific errors
+      String message = 'An error occurred';
+      if (e.code == 'user-not-found') {
+        message = 'No user found for that email.';
+      } else if (e.code == 'wrong-password') {
+        message = 'Wrong password provided.';
+      }
+      
+      // 6. Show the error message in a SnackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } catch (e) {
+      // 7. Catch any other general errors
+      print(e);
+    }
+
+    // 8. ALWAYS set loading to false at the end
+    if (mounted) { // Check if the widget is still on screen
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -100,16 +157,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     minimumSize: const Size.fromHeight(50), // 3. Make it wide
                   ),
                   // 4. onPressed is the click handler
-                  onPressed: () {
-                    // 5. This checks all validators
-                    if (_formKey.currentState!.validate()) {
-                      // Logic for login will go here in the next module
-                      print('Email: ${_emailController.text}');
-                      print('Password: ${_passwordController.text}');
-
-                    }
-                  },
-                  child: const Text('Login'),
+                  onPressed: _login,
+                  // 2. Show a spinner OR text based on _isLoading
+                  child: _isLoading
+                      ? const CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        )
+                      : const Text('Login'),
                 ),
 
                 // 6. A spacer
