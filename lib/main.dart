@@ -117,7 +117,7 @@ class MyApp extends StatelessWidget {
         ),
 
         // 7. --- (FIX) GLOBAL CARD STYLE ---
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 1, // A softer shadow
           color: Colors.white, // Pure white cards on the off-white bg
           shape: RoundedRectangleBorder(
