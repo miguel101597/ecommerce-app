@@ -40,4 +40,7 @@ Module 5:
 Module 11:
 - Create composite index: If order history query fails, manually create composite index in Firebase Console under Indexes for collection 'orders', fields userId (ascending) and createdAt (descending).
 
+Module 12.5:
+- Create composite index: Same as Module 11, for orders query (userId ascending, createdAt descending). Trigger on "My Orders" screen error, create via link in debug console or manually in Firebase Console.
+
 These are manual steps outside code implementation.

@@ -8,6 +8,7 @@ import 'package:ecommerce_app/screens/product_detail_screen.dart'; // 1. ADD THI
 import 'package:ecommerce_app/providers/cart_provider.dart'; // 1. ADD THIS
 import 'package:ecommerce_app/screens/cart_screen.dart'; // 2. ADD THIS
 import 'package:ecommerce_app/screens/order_history_screen.dart'; // 1. ADD THIS
+import 'package:ecommerce_app/screens/profile_screen.dart'; // ADD THIS
 import 'package:provider/provider.dart'; // 3. ADD THIS
 
 // Part 2: Widget Definition
@@ -57,14 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // 10. Move the _signOut function inside this class
-  Future<void> _signOut() async {
-    try {
-      await FirebaseAuth.instance.signOut();
-    } catch (e) {
-      print('Error signing out: $e');
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -131,12 +125,18 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
 
-          // 4. The logout button (always visible)
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Logout',
-            onPressed: _signOut, // 5. Call our _signOut function
-          ),
+           // 4. The profile button (always visible)
+           IconButton(
+             icon: const Icon(Icons.person_outline),
+             tooltip: 'Profile',
+             onPressed: () {
+               Navigator.of(context).push(
+                 MaterialPageRoute(
+                   builder: (context) => const ProfileScreen(),
+                 ),
+               );
+             },
+           ),
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(
