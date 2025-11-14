@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:ecommerce_app/providers/cart_provider.dart'; // 1. ADD THIS
+import 'package:provider/provider.dart'; // 2. ADD THIS
 
 // 1. This is a new StatelessWidget
 class ProductDetailScreen extends StatelessWidget {
@@ -23,6 +25,10 @@ class ProductDetailScreen extends StatelessWidget {
     final String description = productData['description'];
     final String imageUrl = productData['imageUrl'];
     final double price = productData['price'];
+
+    // 1. ADD THIS LINE: Get the CartProvider
+    // We set listen: false because we are not rebuilding, just calling a function
+    final cart = Provider.of<CartProvider>(context, listen: false);
 
     // 2. The main screen widget
     return Scaffold(
@@ -109,8 +115,17 @@ class ProductDetailScreen extends StatelessWidget {
                   // It doesn't do anything... yet.
                   ElevatedButton.icon(
                     onPressed: () {
-                      // We will add logic here in Module 8
-                      print('Product ID to add: $productId');
+                      // 4. THIS IS THE NEW LOGIC!
+                      // Call the addItem function from our provider
+                      cart.addItem(productId, name, price);
+
+                      // 5. Show a confirmation pop-up
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Added to cart!'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
                     },
                     icon: const Icon(Icons.shopping_cart_outlined),
                     label: const Text('Add to Cart'),

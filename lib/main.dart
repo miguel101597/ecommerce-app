@@ -4,6 +4,8 @@ import 'firebase_options.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 import 'package:ecommerce_app/screens/auth_wrapper.dart';
+import 'package:ecommerce_app/providers/cart_provider.dart'; // 1. ADD THIS
+import 'package:provider/provider.dart'; // 2. ADD THIS
 
 void main() async {
   WidgetsBinding widgetsBinding =  WidgetsFlutterBinding.ensureInitialized();
@@ -13,7 +15,15 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(const MyApp());
+  runApp(
+    // 2. We wrap our app in the provider
+    ChangeNotifierProvider(
+      // 3. This "creates" one instance of our cart
+      create: (context) => CartProvider(),
+      // 4. The child is our normal app
+      child: const MyApp(),
+    ),
+  );
 
   FlutterNativeSplash.remove();
 }
