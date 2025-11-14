@@ -14,12 +14,26 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // 2. This is the function that updates the status in Firestore
-  Future<void> _updateOrderStatus(String orderId, String newStatus) async {
+  Future<void> _updateOrderStatus(String orderId, String newStatus, String userId) async {
     try {
       // 3. Find the document and update the 'status' field
       await _firestore.collection('orders').doc(orderId).update({
         'status': newStatus,
       });
+
+      // 3. --- ADD THIS NEW LOGIC ---
+      //    Create a new notification document
+      await _firestore.collection('notifications').add({
+        'userId': userId, // 4. The user this notification is for
+        'title': 'Order Status Updated',
+        'body': 'Your order ($orderId) has been updated to "$newStatus".',
+        'orderId': orderId,
+        'createdAt': FieldValue.serverTimestamp(),
+        'isRead': false, // 5. Mark it as unread
+      });
+      // --- END OF NEW LOGIC ---
+
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Order status updated!')),
       );
@@ -31,7 +45,7 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
   }
   
   // 4. This function shows the update dialog
-  void _showStatusDialog(String orderId, String currentStatus) {
+  void _showStatusDialog(String orderId, String currentStatus, String userId) {
     showDialog(
       context: context, // This is the main screen's context
       builder: (dialogContext) { // 1. RENAME this variable to 'dialogContext'
@@ -48,12 +62,12 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
                 title: Text(status),
                 // 7. Show a checkmark next to the current status
                 trailing: currentStatus == status ? const Icon(Icons.check) : null,
-                onTap: () {
-                  // 8. When tapped:
-                  _updateOrderStatus(orderId, status); // Call update
-                  // 2. FIX: Use 'dialogContext' to pop
-                  Navigator.of(dialogContext).pop();
-                },
+                 onTap: () {
+                   // 8. When tapped:
+                   _updateOrderStatus(orderId, status, userId); // Call update
+                   // 2. FIX: Use 'dialogContext' to pop
+                   Navigator.of(dialogContext).pop();
+                 },
               );
             }).toList(),
           ),
@@ -149,7 +163,7 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
                   
                   // 9. On tap, show our update dialog
                   onTap: () {
-                    _showStatusDialog(order.id, status);
+                    _showStatusDialog(order.id, status, userId);
                   },
                 ),
               );

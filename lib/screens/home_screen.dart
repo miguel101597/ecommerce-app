@@ -9,6 +9,7 @@ import 'package:ecommerce_app/providers/cart_provider.dart'; // 1. ADD THIS
 import 'package:ecommerce_app/screens/cart_screen.dart'; // 2. ADD THIS
 import 'package:ecommerce_app/screens/order_history_screen.dart'; // 1. ADD THIS
 import 'package:ecommerce_app/screens/profile_screen.dart'; // ADD THIS
+import 'package:ecommerce_app/widgets/notification_icon.dart'; // 1. ADD THIS
 import 'package:provider/provider.dart'; // 3. ADD THIS
 
 // Part 2: Widget Definition
@@ -93,9 +94,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               );
             },
-           ),
+            ),
 
-           // 2. --- ADD THIS NEW BUTTON ---
+            // 2. --- ADD OUR NEW WIDGET ---
+            const NotificationIcon(),
+            // --- END OF NEW WIDGET ---
+
+            // 3. --- ADD THIS NEW BUTTON ---
            IconButton(
              icon: const Icon(Icons.receipt_long), // A "receipt" icon
              tooltip: 'My Orders',
