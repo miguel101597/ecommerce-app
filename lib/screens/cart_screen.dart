@@ -88,49 +88,50 @@ class _CartScreenState extends State<CartScreen> {
                 ],
               ),
            ),
+          ),
 
-           // 4. --- ADD THIS NEW BUTTON ---
-           Padding(
-             padding: const EdgeInsets.all(16.0),
-             child: ElevatedButton(
-               style: ElevatedButton.styleFrom(
-                 minimumSize: const Size.fromHeight(50), // Wide button
-               ),
+            // 4. --- ADD THIS NEW BUTTON ---
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50), // Wide button
+                ),
 
-               // 5. Disable button if loading OR if cart is empty
-               onPressed: (_isLoading || cart.items.isEmpty) ? null : () async {
-                 // 6. Start the loading spinner
-                 setState(() {
-                   _isLoading = true;
-                 });
+                // 5. Disable button if loading OR if cart is empty
+                onPressed: (_isLoading || cart.items.isEmpty) ? null : () async {
+                  // 6. Start the loading spinner
+                  setState(() {
+                    _isLoading = true;
+                  });
 
-                 try {
-                   // 7. Get provider (listen: false is for functions)
-                   final cartProvider = Provider.of<CartProvider>(context, listen: false);
+                  try {
+                    // 7. Get provider (listen: false is for functions)
+                    final cartProvider = Provider.of<CartProvider>(context, listen: false);
 
-                   // 8. Call our new methods
-                   await cartProvider.placeOrder();
-                   await cartProvider.clearCart();
+                    // 8. Call our new methods x
+                    await cartProvider.placeOrder();
+                    await cartProvider.clearCart();
 
-                   // 9. Navigate to success screen
-                   Navigator.of(context).pushAndRemoveUntil(
-                     MaterialPageRoute(builder: (context) => const OrderSuccessScreen()),
-                     (route) => false,
-                   );
+                    // 9. Navigate to success screen x
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => const OrderSuccessScreen()),
+                      (route) => false,
+                    );
 
-                 } catch (e) {
-                   // 10. Show error if placeOrder() fails
-                   ScaffoldMessenger.of(context).showSnackBar(
-                     SnackBar(content: Text('Failed to place order: $e')),
-                   );
-                 } finally {
-                   // 11. ALWAYS stop the spinner
-                   if (mounted) {
-                     setState(() {
-                       _isLoading = false;
-                     });
-                   }
-                 }
+                  } catch (e) {
+                    // 10. Show error if placeOrder() fails
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to place order: $e')),
+                    );
+                  } finally {
+                    // 11. ALWAYS stop the spinner
+                    if (mounted) {
+                      setState(() {
+                        _isLoading = false;
+                      });
+                    }
+                  }
                },
 
                // 12. Show spinner or text based on loading state
