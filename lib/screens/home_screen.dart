@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ecommerce_app/screens/admin_panel_screen.dart';
 import 'package:ecommerce_app/widgets/product_card.dart';
+import 'package:ecommerce_app/screens/product_detail_screen.dart'; // 1. ADD THIS IMPORT
 
 // Part 2: Widget Definition
 class HomeScreen extends StatefulWidget {
@@ -149,6 +150,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 productName: productData['name'],
                 price: productData['price'],
                 imageUrl: productData['imageUrl'],
+
+                // 4. --- THIS IS THE NEW PART ---
+                //    Add the onTap property
+                onTap: () {
+                  // 5. Navigate to the new screen
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => ProductDetailScreen(
+                        // 6. Pass the data to the new screen
+                        productData: productData,
+                        productId: productDoc.id, // 7. Pass the unique ID!
+                      ),
+                    ),
+                  );
+                },
               );
             },
           );

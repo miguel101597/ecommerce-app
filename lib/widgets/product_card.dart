@@ -7,6 +7,7 @@ class ProductCard extends StatelessWidget {
   final String productName;
   final double price;
   final String imageUrl;
+  final VoidCallback onTap; // 1. ADD THIS LINE
 
   // 3. The constructor takes this data
   const ProductCard({
@@ -14,12 +15,15 @@ class ProductCard extends StatelessWidget {
     required this.productName,
     required this.price,
     required this.imageUrl,
+    required this.onTap, // 2. ADD THIS TO THE CONSTRUCTOR
   });
 
   @override
   Widget build(BuildContext context) {
-    // 1. A Card widget gives us a nice shadow and rounded corners
-    return Card(
+    // 1. Wrap the Card in an InkWell widget
+    return InkWell(
+      onTap: onTap, // 2. Call the function we passed in
+      child: Card(
       elevation: 3,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
