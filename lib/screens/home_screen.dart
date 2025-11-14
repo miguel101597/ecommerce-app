@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ecommerce_app/screens/admin_panel_screen.dart';
+import 'package:ecommerce_app/widgets/product_card.dart';
 
 // Part 2: Widget Definition
 class HomeScreen extends StatefulWidget {
@@ -93,11 +94,65 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: const Center(
-        child: Text(
-          'This is the Home Screen. Products will be listed here!',
-          style: TextStyle(fontSize: 18),
-        ),
+      body: StreamBuilder<QuerySnapshot>(
+
+        // 2. This is our query to Firestore
+        stream: FirebaseFirestore.instance
+            .collection('products')
+            .orderBy('createdAt', descending: true) // 3. Show newest first
+            .snapshots(),
+
+        // 4. The builder runs every time new data arrives from the stream
+        builder: (context, snapshot) {
+
+          // 5. STATE 1: While data is loading
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          // 6. STATE 2: If an error occurs
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          // 7. STATE 3: If there's no data (or no products)
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(
+              child: Text('No products found. Add some in the Admin Panel!'),
+            );
+          }
+
+          // 8. STATE 4: We have data!
+          // Get the list of product documents from the snapshot
+          final products = snapshot.data!.docs;
+
+          // 9. Use GridView.builder for a 2-column grid
+          return GridView.builder(
+            padding: const EdgeInsets.all(10.0),
+
+            // 10. This configures the grid
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2, // 2 columns
+              crossAxisSpacing: 10, // Horizontal space between cards
+              mainAxisSpacing: 10, // Vertical space between cards
+              childAspectRatio: 3 / 4, // Makes cards taller than wide
+            ),
+
+            itemCount: products.length,
+            itemBuilder: (context, index) {
+              // 11. Get the data for one product
+              final productDoc = products[index];
+              final productData = productDoc.data() as Map<String, dynamic>;
+
+              // 12. Return our custom ProductCard widget!
+              return ProductCard(
+                productName: productData['name'],
+                price: productData['price'],
+                imageUrl: productData['imageUrl'],
+              );
+            },
+          );
+        },
       ),
     );
   }

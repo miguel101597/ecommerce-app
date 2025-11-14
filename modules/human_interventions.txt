@@ -30,4 +30,11 @@ Module 4:
 - Add package: Run `flutter pub add firebase_auth`.
 - Enable authentication: Manually log into Firebase Console, open the project, go to Authentication > Sign-in method, enable Email/Password, and save.
 
+Module 5:
+- Add package: Run `flutter pub add cloud_firestore`.
+- Enable Firestore: Manually log into Firebase Console, go to Firestore Database → Create database in test mode.
+- Sign up: Run the app, sign up with your email to create a user document in Firestore.
+- Set admin role: In Firestore Console, edit your user document in 'users' collection, change 'role' from 'user' to 'admin'.
+- Test: Run `flutter run` to verify admin button appears for admin users, product upload form works, and data saves to Firestore.
+
 These are manual steps outside code implementation.
