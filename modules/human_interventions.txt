@@ -37,4 +37,7 @@ Module 5:
 - Set admin role: In Firestore Console, edit your user document in 'users' collection, change 'role' from 'user' to 'admin'.
 - Test: Run `flutter run` to verify admin button appears for admin users, product upload form works, and data saves to Firestore.
 
+Module 11:
+- Create composite index: If order history query fails, manually create composite index in Firebase Console under Indexes for collection 'orders', fields userId (ascending) and createdAt (descending).
+
 These are manual steps outside code implementation.

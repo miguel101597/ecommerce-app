@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ecommerce_app/screens/admin_order_screen.dart'; // 1. ADD THIS
 
 class AdminPanelScreen extends StatefulWidget {
   const AdminPanelScreen({super.key});
@@ -96,12 +97,45 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          // 2. The Form widget that holds our fields
-          child: Form(
-            key: _formKey, // 3. Link the form to our key
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+          child: Column( // 2. Find this Column
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+
+              // 3. --- ADD THIS NEW BUTTON ---
+              ElevatedButton.icon(
+                icon: const Icon(Icons.list_alt),
+                label: const Text('Manage All Orders'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.indigo, // A different color
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  textStyle: const TextStyle(fontSize: 16),
+                ),
+                onPressed: () {
+                  // 4. Navigate to our new screen
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const AdminOrderScreen(),
+                    ),
+                  );
+                },
+              ),
+
+              // 5. A divider to separate it
+              const Divider(height: 30, thickness: 1),
+
+              const Text(
+                'Add New Product',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
+
+              // 6. The rest of your form (wrapped in its own Form widget)
+              Form(
+                key: _formKey, // 3. Link the form to our key
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
 
                 // 4. The "Image URL" text field
                 TextFormField(
@@ -168,8 +202,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                       ? const CircularProgressIndicator()
                       : const Text('Upload Product'),
                 ),
-              ],
-            ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
