@@ -1,6 +1,7 @@
 import 'package:ecommerce_app/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 // 1. Create a StatefulWidget
 class SignUpScreen extends StatefulWidget {
@@ -19,6 +20,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   // 2. Add loading state and auth instance
   bool _isLoading = false;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // 4. Create TextEditingControllers
   final TextEditingController _emailController = TextEditingController();
@@ -42,13 +44,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     try {
-      // 1. This is the Firebase command to CREATE a user
-      await _auth.createUserWithEmailAndPassword(
+      // 3. This is the Firebase command to CREATE a user
+      final UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-      
-      // 2. AuthWrapper will auto-navigate to HomeScreen.
+
+      // 4. --- THIS IS THE NEW PART ---
+      // After creating the user, save their info to Firestore
+      if (userCredential.user != null) {
+        // 5. Create a document in a 'users' collection
+        //    We use the user's unique UID as the document ID
+        await _firestore.collection('users').doc(userCredential.user!.uid).set({
+          'email': _emailController.text.trim(),
+          'role': 'user', // 6. Set the default role to 'user'
+          'createdAt': FieldValue.serverTimestamp(), // For our records
+        });
+      }
 
     } on FirebaseAuthException catch (e) {
       // 3. Handle specific sign-up errors
