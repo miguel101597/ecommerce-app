@@ -91,7 +91,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin - Add Product'),
+        // 1. Let's change the title to be more general
+        title: const Text('Admin Panel'),
       ),
       // 1. Lets the user scroll if the keyboard covers the fields
       body: SingleChildScrollView(
@@ -107,6 +108,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 label: const Text('Manage All Orders'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.indigo, // A different color
+                  foregroundColor: Colors.white, // Make sure text/icon is visible
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   textStyle: const TextStyle(fontSize: 16),
                 ),
