@@ -2,15 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:ecommerce_app/providers/cart_provider.dart'; // 1. ADD THIS
 import 'package:provider/provider.dart'; // 2. ADD THIS
 
-// 1. This is a new StatelessWidget
-class ProductDetailScreen extends StatelessWidget {
+// 1. Change StatelessWidget to StatefulWidget
+class ProductDetailScreen extends StatefulWidget {
 
-  // 2. We will pass in the product's data (the map)
   final Map<String, dynamic> productData;
-  // 3. We'll also pass the unique product ID (critical for 'Add to Cart' later)
   final String productId;
 
-  // 4. The constructor takes both parameters
   const ProductDetailScreen({
     super.key,
     required this.productData,
@@ -18,13 +15,42 @@ class ProductDetailScreen extends StatelessWidget {
   });
 
   @override
+  // 2. Create the State class
+  State<ProductDetailScreen> createState() => _ProductDetailScreenState();
+}
+
+// 3. Rename the main class to _ProductDetailScreenState and extend State
+class _ProductDetailScreenState extends State<ProductDetailScreen> {
+
+  // 4. ADD OUR NEW STATE VARIABLE FOR QUANTITY
+  int _quantity = 1;
+
+  // 1. ADD THIS FUNCTION
+  void _incrementQuantity() {
+    setState(() {
+      _quantity++;
+    });
+  }
+
+  // 2. ADD THIS FUNCTION
+  void _decrementQuantity() {
+    // We don't want to go below 1
+    if (_quantity > 1) {
+      setState(() {
+        _quantity--;
+      });
+    }
+  }
+
+  // 5. The build method will go inside here
+  @override
   Widget build(BuildContext context) {
 
-    // 1. Extract data from the map for easier use
-    final String name = productData['name'];
-    final String description = productData['description'];
-    final String imageUrl = productData['imageUrl'];
-    final double price = productData['price'];
+    // 1. We now access productData using 'widget.'
+    final String name = widget.productData['name'];
+    final String description = widget.productData['description'];
+    final String imageUrl = widget.productData['imageUrl'];
+    final double price = widget.productData['price'];
 
     // 1. ADD THIS LINE: Get the CartProvider
     // We set listen: false because we are not rebuilding, just calling a function
@@ -111,19 +137,54 @@ class ProductDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 30),
 
-                  // 13. The "Add to Cart" button (UI ONLY)
-                  // It doesn't do anything... yet.
+                  // 4. --- ADD THIS NEW SECTION ---
+                  //    (before the "Add to Cart" button)
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // 5. DECREMENT BUTTON
+                      IconButton.filledTonal(
+                        icon: const Icon(Icons.remove),
+                        onPressed: _decrementQuantity,
+                      ),
+
+                      // 6. QUANTITY DISPLAY
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          '$_quantity', // 7. Display our state variable
+                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+
+                      // 8. INCREMENT BUTTON
+                      IconButton.filled(
+                        icon: const Icon(Icons.add),
+                        onPressed: _incrementQuantity,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  // --- END OF NEW SECTION ---
+
+                  // 9. Find your "Add to Cart" button
                   ElevatedButton.icon(
                     onPressed: () {
-                      // 4. THIS IS THE NEW LOGIC!
-                      // Call the addItem function from our provider
-                      cart.addItem(productId, name, price);
+                      // 10. --- THIS IS THE UPDATED LOGIC ---
+                      //    We now pass the _quantity from our state
+                      cart.addItem(
+                        widget.productId,
+                        name,
+                        price,
+                        _quantity, // 11. Pass the selected quantity
+                      );
 
-                      // 5. Show a confirmation pop-up
+                      // 12. Update the SnackBar message
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Added to cart!'),
-                          duration: Duration(seconds: 2),
+                        SnackBar(
+                          content: Text('Added $_quantity x $name to cart!'),
+                          duration: const Duration(seconds: 2),
                         ),
                       );
                     },
