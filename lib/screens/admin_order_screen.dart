@@ -33,11 +33,11 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
   // 4. This function shows the update dialog
   void _showStatusDialog(String orderId, String currentStatus) {
     showDialog(
-      context: context,
-      builder: (context) {
+      context: context, // This is the main screen's context
+      builder: (dialogContext) { // 1. RENAME this variable to 'dialogContext'
         // 5. A list of all possible statuses
         const statuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
-        
+
         return AlertDialog(
           title: const Text('Update Order Status'),
           content: Column(
@@ -51,14 +51,16 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
                 onTap: () {
                   // 8. When tapped:
                   _updateOrderStatus(orderId, status); // Call update
-                  Navigator.of(context).pop(); // Close the dialog
+                  // 2. FIX: Use 'dialogContext' to pop
+                  Navigator.of(dialogContext).pop();
                 },
               );
             }).toList(),
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              // 3. FIX: Use 'dialogContext' to pop here too
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Close'),
             )
           ],
@@ -102,15 +104,21 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
             itemCount: orders.length,
             itemBuilder: (context, index) {
               final order = orders[index];
+
+              // --- NULL-SAFE DATA HANDLING ---
+              // This prevents crashes if data is missing
               final orderData = order.data() as Map<String, dynamic>;
-              
-              // 5. Format the date (same as OrderCard)
-              final Timestamp timestamp = orderData['createdAt'];
-              final String formattedDate = DateFormat('MM/dd/yyyy hh:mm a')
-                  .format(timestamp.toDate());
-              
-              // 6. Get the current status
-              final String status = orderData['status'];
+
+              final Timestamp? timestamp = orderData['createdAt'];
+              final String formattedDate = timestamp != null
+                  ? DateFormat('MM/dd/yyyy hh:mm a').format(timestamp.toDate())
+                  : 'No date';
+
+              final String status = orderData['status'] ?? 'Unknown';
+              final double totalPrice = (orderData['totalPrice'] ?? 0.0) as double;
+              final String formattedTotal = '₱${totalPrice.toStringAsFixed(2)}';
+              final String userId = orderData['userId'] ?? 'Unknown User';
+              // --- END OF NULL-SAFE DATA HANDLING ---
 
               // 7. Build a Card for each order
               return Card(
@@ -121,8 +129,8 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                   ),
                   subtitle: Text(
-                    'User: ${orderData['userId']}\n'
-                    'Total: ₱${(orderData['totalPrice']).toStringAsFixed(2)} | Date: $formattedDate'
+                    'User: $userId\n'
+                    'Total: $formattedTotal | Date: $formattedDate'
                   ),
                   isThreeLine: true,
                   

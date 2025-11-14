@@ -78,23 +78,24 @@ class CartProvider with ChangeNotifier {
     return total;
   }
 
-  // 7. ADD THIS CONSTRUCTOR
+  // 2. ADD this new EMPTY constructor.
   CartProvider() {
-    print('CartProvider initialized');
-    // Listen to authentication changes
+    print('CartProvider created.');
+  }
+
+  // 3. ADD this new PUBLIC method. We moved all the logic here.
+  void initializeAuthListener() {
+    print('CartProvider auth listener initialized');
     _authSubscription = _auth.authStateChanges().listen((User? user) {
       if (user == null) {
-        // User is logged out
         print('User logged out, clearing cart.');
         _userId = null;
-        _items = []; // Clear local cart
+        _items = [];
       } else {
-        // User is logged in
         print('User logged in: ${user.uid}. Fetching cart...');
         _userId = user.uid;
-        _fetchCart(); // Load their cart from Firestore
+        _fetchCart();
       }
-      // Notify listeners to update UI (e.g., clear cart badge on logout)
       notifyListeners();
     });
   }
