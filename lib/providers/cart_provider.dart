@@ -171,6 +171,65 @@ class CartProvider with ChangeNotifier {
     notifyListeners(); // Tell widgets to rebuild
   }
 
+  // 1. ADD THIS: Creates an order in the 'orders' collection
+  Future<void> placeOrder() async {
+    // 2. Check if we have a user and items
+    if (_userId == null || _items.isEmpty) {
+      // Don't place an order if cart is empty or user is logged out
+      throw Exception('Cart is empty or user is not logged in.');
+    }
+
+    try {
+      // 3. Convert our List<CartItem> to a List<Map> using toJson()
+      final List<Map<String, dynamic>> cartData =
+          _items.map((item) => item.toJson()).toList();
+
+      // 4. Get total price and item count from our getters
+      final double total = totalPrice;
+      final int count = itemCount;
+
+      // 5. Create a new document in the 'orders' collection
+      await _firestore.collection('orders').add({
+        'userId': _userId,
+        'items': cartData, // Our list of item maps
+        'totalPrice': total,
+        'itemCount': count,
+        'status': 'Pending', // 6. IMPORTANT: For admin verification
+        'createdAt': FieldValue.serverTimestamp(), // For sorting
+      });
+
+      // 7. Note: We DO NOT clear the cart here.
+      //    We'll call clearCart() separately from the UI after this succeeds.
+
+    } catch (e) {
+      print('Error placing order: $e');
+      // 8. Re-throw the error so the UI can catch it
+      throw e;
+    }
+  }
+
+  // 9. ADD THIS: Clears the cart locally AND in Firestore
+  Future<void> clearCart() async {
+    // 10. Clear the local list
+    _items = [];
+
+    // 11. If logged in, clear the Firestore cart as well
+    if (_userId != null) {
+      try {
+        // 12. Set the 'cartItems' field in their cart doc to an empty list
+        await _firestore.collection('userCarts').doc(_userId).set({
+          'cartItems': [],
+        });
+        print('Firestore cart cleared.');
+      } catch (e) {
+        print('Error clearing Firestore cart: $e');
+      }
+    }
+
+    // 13. Notify all listeners (this will clear the UI)
+    notifyListeners();
+  }
+
   // 12. ADD THIS METHOD (or update it if it exists)
   @override
   void dispose() {
