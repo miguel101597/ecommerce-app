@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:ecommerce_app/widgets/wishlist_button.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class ProductCard extends StatelessWidget {
   final String productId;
@@ -20,14 +19,20 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Card(
         clipBehavior: Clip.hardEdge,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        color: theme.cardColor,
+        elevation: 2,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // IMAGE WITH GRADIENT OVERLAY
             Expanded(
               flex: 3,
               child: Stack(
@@ -41,14 +46,34 @@ class ProductCard extends StatelessWidget {
                         return const Center(child: CircularProgressIndicator());
                       },
                       errorBuilder: (context, error, stackTrace) {
-                        return const Center(
-                          child: Icon(Icons.broken_image,
-                              size: 40, color: Colors.grey),
+                        return Center(
+                          child: Icon(
+                            Icons.broken_image,
+                            size: 40,
+                            color: theme.colorScheme.onSurface.withOpacity(0.3),
+                          ),
                         );
                       },
                     ),
                   ),
 
+                  // GRADIENT OVERLAY
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            theme.colorScheme.background.withOpacity(0.3),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // WISHLIST BUTTON
                   Positioned(
                     top: 8,
                     right: 8,
@@ -58,6 +83,7 @@ class ProductCard extends StatelessWidget {
               ),
             ),
 
+            // TEXT SECTION
             Expanded(
               flex: 2,
               child: Padding(
@@ -66,22 +92,24 @@ class ProductCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // PRODUCT NAME
                     Text(
                       productName,
-                      style: const TextStyle(
+                      style: theme.textTheme.titleMedium!.copyWith(
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                     ),
 
+                    const SizedBox(height: 4),
+
+                    // PRICE
                     Text(
                       '₱${price.toStringAsFixed(2)}',
-                      style: GoogleFonts.notoSans(
-                        fontSize: 15,
-                        color: Colors.grey[800],
+                      style: theme.textTheme.bodyMedium!.copyWith(
                         fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
                       ),
                     ),
                   ],
