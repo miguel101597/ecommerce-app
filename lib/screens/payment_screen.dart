@@ -3,15 +3,11 @@ import 'package:ecommerce_app/screens/order_success_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-// 1. An enum to represent our different payment methods
-//    This is cleaner than using strings like "gcash"
 enum PaymentMethod { card, gcash, bank }
 
 class PaymentScreen extends StatefulWidget {
-  // 2. We need to know the total amount to be paid
   final double totalAmount;
 
-  // 3. The constructor will require this amount
   const PaymentScreen({super.key, required this.totalAmount});
 
   @override
@@ -19,145 +15,154 @@ class PaymentScreen extends StatefulWidget {
 }
 
 class _PaymentScreenState extends State<PaymentScreen> {
-  // 4. State variables to track selection and loading
-  PaymentMethod _selectedMethod = PaymentMethod.card; // Default to card
+  PaymentMethod _selectedMethod = PaymentMethod.card;
   bool _isLoading = false;
 
-  // 1. This is the "Change Password" logic
   Future<void> _processPayment() async {
-    // 1. Start loading spinner on the button
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      // 2. --- THIS IS OUR MOCK API CALL ---
-      //    We just wait for 3 seconds to simulate a network request
-      //    to GCash, a bank, or a credit card processor.
       await Future.delayed(const Duration(seconds: 3));
 
-      // 3. If the "payment" is "successful" (i.e., the 3 seconds are up),
-      //    we get the CartProvider.
-      //    (listen: false is critical for calls inside functions)
       final cartProvider = Provider.of<CartProvider>(context, listen: false);
-
-      // 4. Call the functions we built in Module 10
-      //    This is the logic we are *moving* from the CartScreen
       await cartProvider.placeOrder();
       await cartProvider.clearCart();
 
-      // 5. If successful, navigate to success screen
-      //    We use pushAndRemoveUntil to clear the cart/payment screens
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const OrderSuccessScreen()),
-          (route) => false,
+              (route) => false,
         );
       }
     } catch (e) {
-      // 6. Handle any errors from placing the order
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to place order: $e')),
       );
     } finally {
-      // 7. ALWAYS stop loading, even if an error occurred
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // 1. Use the Philippine Peso sign (₱)
-    //    We get the totalAmount from 'widget.totalAmount'
-    final String formattedTotal = '₱${widget.totalAmount.toStringAsFixed(2)}';
+    final theme = Theme.of(context);
+    final formattedTotal = '₱${widget.totalAmount.toStringAsFixed(2)}';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Confirm Payment'),
+        title: Text('Confirm Payment', style: theme.appBarTheme.titleTextStyle),
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 2. Show the total amount
-            Text(
-              'Total Amount:',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
+            // Total Amount Section
+            Text('Total Amount:', style: theme.textTheme.titleLarge),
+            const SizedBox(height: 4),
             Text(
               formattedTotal,
-              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.deepPurple),
+              style: theme.textTheme.headlineMedium!.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.primary,
+              ),
             ),
             const SizedBox(height: 24),
             const Divider(),
 
-            // 3. Payment method selection
-            Text(
-              'Select Payment Method:',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            // Payment Method Selection
+            Text('Select Payment Method:', style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
 
-            // 4. RadioListTile for Card
-            RadioListTile<PaymentMethod>(
-              title: const Text('Credit/Debit Card'),
-              secondary: const Icon(Icons.credit_card),
-              value: PaymentMethod.card,
-              groupValue: _selectedMethod,
-              onChanged: (PaymentMethod? value) {
-                setState(() {
-                  _selectedMethod = value!;
-                });
-              },
+            // Modern selectable cards for payment methods
+            _buildPaymentMethodTile(
+              context,
+              label: 'Credit/Debit Card',
+              icon: Icons.credit_card,
+              method: PaymentMethod.card,
+              theme: theme,
             ),
-
-            // 5. RadioListTile for GCash
-            RadioListTile<PaymentMethod>(
-              title: const Text('GCash'),
-              // We use a generic icon, but you could add a real logo here
-              secondary: const Icon(Icons.phone_android),
-              value: PaymentMethod.gcash,
-              groupValue: _selectedMethod,
-              onChanged: (PaymentMethod? value) {
-                setState(() {
-                  _selectedMethod = value!;
-                });
-              },
+            _buildPaymentMethodTile(
+              context,
+              label: 'GCash',
+              icon: Icons.phone_android,
+              method: PaymentMethod.gcash,
+              theme: theme,
             ),
-
-            // 6. RadioListTile for Bank Transfer
-            RadioListTile<PaymentMethod>(
-              title: const Text('Bank Transfer'),
-              secondary: const Icon(Icons.account_balance),
-              value: PaymentMethod.bank,
-              groupValue: _selectedMethod,
-              onChanged: (PaymentMethod? value) {
-                setState(() {
-                  _selectedMethod = value!;
-                });
-              },
+            _buildPaymentMethodTile(
+              context,
+              label: 'Bank Transfer',
+              icon: Icons.account_balance,
+              method: PaymentMethod.bank,
+              theme: theme,
             ),
 
             const SizedBox(height: 32),
 
-            // 7. The "Pay Now" button
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+            // Pay Now Button
+            SizedBox(
+              height: 55,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                onPressed: _isLoading ? null : _processPayment,
+                child: _isLoading
+                    ? CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation(theme.colorScheme.onPrimary),
+                )
+                    : Text(
+                  'Pay Now ($formattedTotal)',
+                  style: theme.textTheme.titleMedium!.copyWith(
+                    color: theme.colorScheme.onPrimary,
+                  ),
+                ),
               ),
-              // 8. Disable button when loading
-              onPressed: _isLoading ? null : _processPayment,
-              child: _isLoading
-                  ? const CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    )
-                  : Text('Pay Now ($formattedTotal)'),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPaymentMethodTile(BuildContext context,
+      {required String label,
+        required IconData icon,
+        required PaymentMethod method,
+        required ThemeData theme}) {
+    final bool isSelected = _selectedMethod == method;
+
+    return GestureDetector(
+      onTap: () => setState(() => _selectedMethod = method),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? theme.colorScheme.primary.withOpacity(0.1)
+              : theme.cardColor,
+          border: Border.all(
+            color: isSelected ? theme.colorScheme.primary : theme.dividerColor,
+            width: isSelected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            if (isSelected)
+              BoxShadow(
+                color: theme.colorScheme.primary.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              )
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: theme.colorScheme.primary, size: 28),
+            const SizedBox(width: 16),
+            Text(label, style: theme.textTheme.bodyLarge),
           ],
         ),
       ),
