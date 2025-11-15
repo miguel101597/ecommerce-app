@@ -4,9 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class ChatScreen extends StatefulWidget {
-  // 1. This is the "chat room ID". It's just the user's ID.
   final String chatRoomId;
-  // 2. This is for the AppBar title (e.g., "Chat with user@example.com")
   final String? userName;
 
   const ChatScreen({
@@ -20,15 +18,12 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  // 3. Get Firebase instances
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // 4. Controllers
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  // 1. This function runs ONCE when the screen is loaded
   @override
   void initState() {
     super.initState();
@@ -39,17 +34,13 @@ class _ChatScreenState extends State<ChatScreen> {
     final User? currentUser = _auth.currentUser;
     if (currentUser == null) return;
 
-    // 2. We need to know which counter to reset
-    // 3. If I am the USER opening this chat:
     if (currentUser.uid == widget.chatRoomId) {
       await _firestore.collection('chats').doc(widget.chatRoomId).set({
-        'unreadByUserCount': 0, // Reset the user's count
-      }, SetOptions(merge: true)); // 'merge: true' creates the doc if it doesn't exist
-    }
-    // 4. If I am the ADMIN opening this chat:
-    else {
+        'unreadByUserCount': 0,
+      }, SetOptions(merge: true));
+    } else {
       await _firestore.collection('chats').doc(widget.chatRoomId).set({
-        'unreadByAdminCount': 0, // Reset the admin's count
+        'unreadByAdminCount': 0,
       }, SetOptions(merge: true));
     }
   }
@@ -62,54 +53,42 @@ class _ChatScreenState extends State<ChatScreen> {
 
     final String messageText = _messageController.text.trim();
     _messageController.clear();
-
     final timestamp = FieldValue.serverTimestamp();
 
     try {
-      // --- TASK 1: Save the message ---
-      // (This is standard: save to the 'messages' subcollection)
       await _firestore
           .collection('chats')
-          .doc(widget.chatRoomId)   // This is the USER's ID
-          .collection('messages') // The subcollection
-          .add({                    // Add a new message document
+          .doc(widget.chatRoomId)
+          .collection('messages')
+          .add({
         'text': messageText,
         'createdAt': timestamp,
         'senderId': currentUser.uid,
         'senderEmail': currentUser.email,
       });
 
-      // --- TASK 2: Update the Parent Doc & Unread Counts ---
       Map<String, dynamic> parentDocData = {
         'lastMessage': messageText,
         'lastMessageAt': timestamp,
       };
 
-      // 1. If I am the USER sending:
       if (currentUser.uid == widget.chatRoomId) {
         parentDocData['userEmail'] = currentUser.email;
-        // Increment the ADMIN's unread count
         parentDocData['unreadByAdminCount'] = FieldValue.increment(1);
-      }
-      // 2. If I am the ADMIN sending:
-      else {
-        // Increment the USER's unread count
+      } else {
         parentDocData['unreadByUserCount'] = FieldValue.increment(1);
       }
 
-      // 3. Use .set(merge: true) to create/update the parent doc
       await _firestore
           .collection('chats')
           .doc(widget.chatRoomId)
           .set(parentDocData, SetOptions(merge: true));
 
-      // --- TASK 3: Scroll to bottom ---
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
-
     } catch (e) {
       print("Error sending message: $e");
     }
@@ -117,48 +96,69 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final User? currentUser = _auth.currentUser;
 
     return Scaffold(
       appBar: AppBar(
-        // Show "Chat with [User Email]" for admin, or "Contact Admin" for user
-        title: Text(widget.userName ?? 'Contact Admin'),
+        title: Text(
+          widget.userName ?? 'Contact Admin',
+          style: theme.appBarTheme.titleTextStyle,
+        ),
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        elevation: 0,
       ),
       body: Column(
         children: [
-          // --- The Message List ---
+          // --- Message List ---
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              // Query the 'messages' subcollection
               stream: _firestore
                   .collection('chats')
                   .doc(widget.chatRoomId)
                   .collection('messages')
-                  .orderBy('createdAt', descending: false) // Oldest first
+                  .orderBy('createdAt', descending: false)
                   .snapshots(),
-
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Center(
+                    child: CircularProgressIndicator(
+                      valueColor:
+                      AlwaysStoppedAnimation(theme.colorScheme.primary),
+                    ),
+                  );
                 }
                 if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}\n\n(Have you created the Firestore Index?)'));
+                  return Center(
+                    child: Text(
+                      'Error: ${snapshot.error}\n(Have you created the Firestore Index?)',
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(color: theme.colorScheme.error),
+                    ),
+                  );
                 }
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(child: Text('Say hello!'));
+                  return Center(
+                    child: Text(
+                      'Say hello!',
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(color: theme.colorScheme.onSurface),
+                    ),
+                  );
                 }
 
                 final messages = snapshot.data!.docs;
 
                 return ListView.builder(
                   controller: _scrollController,
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final messageData = messages[index].data() as Map<String, dynamic>;
                     return ChatBubble(
                       message: messageData['text'] ?? '',
-                      // Check if sender is the current user
                       isCurrentUser: messageData['senderId'] == currentUser!.uid,
+                      timestamp: (messageData['createdAt'] as Timestamp?)?.toDate(),
                     );
                   },
                 );
@@ -166,26 +166,42 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
 
-          // --- The Text Input Field ---
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: const InputDecoration(
-                      hintText: 'Type your message...',
-                      border: OutlineInputBorder(),
+          // --- Input Field ---
+          SafeArea(
+            top: false, // Keep AppBar padding intact
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _messageController,
+                      decoration: InputDecoration(
+                        hintText: 'Type your message...',
+                        filled: true,
+                        fillColor: theme.colorScheme.surface.withOpacity(0.05),
+                        contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      style: theme.textTheme.bodyMedium,
+                      onSubmitted: (value) => _sendMessage(),
                     ),
-                    onSubmitted: (value) => _sendMessage(),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: _sendMessage,
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  Material(
+                    color: theme.colorScheme.primary,
+                    shape: const CircleBorder(),
+                    child: IconButton(
+                      icon: Icon(Icons.send, color: theme.colorScheme.onPrimary),
+                      onPressed: _sendMessage,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
