@@ -9,19 +9,15 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // 1. Get Firebase instances
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final User? _currentUser = FirebaseAuth.instance.currentUser;
 
-  // 2. Form key and controllers for changing password
   final _formKey = GlobalKey<FormState>();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  // 3. State variable for loading
   bool _isLoading = false;
 
-  // 4. Clean up controllers
   @override
   void dispose() {
     _newPasswordController.dispose();
@@ -29,135 +25,110 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  // 1. This is the "Change Password" logic
   Future<void> _changePassword() async {
-    // 2. Validate the form
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      // 3. This is the Firebase command to update the password
       await _currentUser!.updatePassword(_newPasswordController.text);
 
-      // 4. Show success message
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password changed successfully!'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Password changed successfully!'),
+          backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       );
-      // Clear the fields
+
       _formKey.currentState!.reset();
       _newPasswordController.clear();
       _confirmPasswordController.clear();
-
     } on FirebaseAuthException catch (e) {
-      // 5. Handle errors
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to change password: ${e.message}'),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
       print("Error changing password: ${e.code}");
-      // e.code 'requires-recent-login' is a common error
-      // This means the user's token is old.
-      // You can prompt them to log out and log back in.
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  // 6. This is the "Logout" logic
   Future<void> _signOut() async {
-    // 2. Get the Navigator *before* the async call
-    //    (This avoids a "don't use BuildContext" warning)
     final navigator = Navigator.of(context);
-
-    // 3. This is your existing code
     await _auth.signOut();
-
-    // 4. --- THIS IS THE FIX ---
-    //    After signing out, pop all screens until we are
-    //    back at the very first screen (which is our AuthWrapper).
-    //    The AuthWrapper will then correctly show the LoginScreen.
     navigator.popUntil((route) => route.isFirst);
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: Text('Profile', style: theme.appBarTheme.titleTextStyle),
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. User Info Section
-            Text(
-              'Logged in as:',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            // User Info Section
+            Text('Logged in as:', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 4),
             Text(
               _currentUser?.email ?? 'Not logged in',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
-            const Divider(),
+            Divider(color: theme.dividerColor),
             const SizedBox(height: 16),
 
-            // 2. Change Password Form
-            Text(
-              'Change Password',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
+            // Change Password Section
+            Text('Change Password', style: theme.textTheme.titleLarge),
             const SizedBox(height: 16),
             Form(
               key: _formKey,
               child: Column(
                 children: [
-                  // 3. New Password Field
                   TextFormField(
                     controller: _newPasswordController,
                     obscureText: true,
-                    decoration:
-                        const InputDecoration(labelText: 'New Password'),
+                    decoration: InputDecoration(
+                      labelText: 'New Password',
+                      filled: true,
+                      fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.05),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a password';
-                      }
-                      if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
-                      }
+                      if (value == null || value.isEmpty) return 'Please enter a password';
+                      if (value.length < 6) return 'Password must be at least 6 characters';
                       return null;
                     },
                   ),
                   const SizedBox(height: 16),
-                  // 4. Confirm Password Field
                   TextFormField(
                     controller: _confirmPasswordController,
                     obscureText: true,
-                    decoration:
-                        const InputDecoration(labelText: 'Confirm Password'),
+                    decoration: InputDecoration(
+                      labelText: 'Confirm Password',
+                      filled: true,
+                      fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.05),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please confirm your password';
-                      }
-                      // 5. Check if it matches the other field
-                      if (value != _newPasswordController.text) {
-                        return 'Passwords do not match';
-                      }
+                      if (value == null || value.isEmpty) return 'Please confirm your password';
+                      if (value != _newPasswordController.text) return 'Passwords do not match';
                       return null;
                     },
                   ),
@@ -165,31 +136,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            
-            // 6. "Change Password" Button
+
+            // Change Password Button
             ElevatedButton(
+              onPressed: _isLoading ? null : _changePassword,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              onPressed: _isLoading ? null : _changePassword,
               child: _isLoading
-                  ? const CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    )
-                  : const Text('Change Password'),
+                  ? CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation(theme.colorScheme.onPrimary),
+              )
+                  : Text('Change Password', style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onPrimary)),
             ),
-            
             const SizedBox(height: 40),
-            const Divider(),
+            Divider(color: theme.dividerColor),
             const SizedBox(height: 20),
 
-            // 7. The "Logout" Button
+            // Logout Button
             ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red[700], // Make it red
-              ),
               onPressed: _signOut,
-              child: const Text('Log Out'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.error,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text('Log Out', style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onError)),
             ),
           ],
         ),
