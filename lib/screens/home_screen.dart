@@ -25,13 +25,10 @@ class _HomeScreenState extends State<HomeScreen> {
   final User? _currentUser = FirebaseAuth.instance.currentUser;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-
   String _selectedCategory = 'All';
   final double _minPrice = 0.0;
   final double _maxPrice = 50000.0;
-
   late RangeValues _priceRange;
-
 
   @override
   void initState() {
@@ -72,10 +69,14 @@ class _HomeScreenState extends State<HomeScreen> {
     return ChoiceChip(
       label: Text(category),
       selected: isSelected,
-      selectedColor: theme.colorScheme.secondary.withOpacity(0.4),
+      backgroundColor: Colors.grey[200],
+      selectedColor: theme.colorScheme.primary.withOpacity(0.2),
       labelStyle: TextStyle(
-        color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+        color: isSelected ? theme.colorScheme.primary : Colors.black87,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      side: BorderSide(
+        color: isSelected ? theme.colorScheme.primary : Colors.grey.shade400,
       ),
       onSelected: (selected) {
         if (selected) {
@@ -87,16 +88,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        centerTitle: true,
         title: Image.asset(
           'assets/images/app_logo.png',
-          height: 60,
+          height: 50,
         ),
-
         actions: [
           Consumer<CartProvider>(
             builder: (context, cart, child) {
@@ -104,7 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 label: Text(cart.itemCount.toString()),
                 isLabelVisible: cart.itemCount > 0,
                 child: IconButton(
-                  icon: const Icon(Icons.shopping_cart),
+                  icon: const Icon(Icons.shopping_cart_outlined),
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -117,10 +121,8 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           const NotificationIcon(),
-
           IconButton(
             icon: const Icon(Icons.favorite_border),
-            tooltip: 'Wishlist',
             onPressed: () async {
               await Navigator.of(context).push(
                 MaterialPageRoute(
@@ -130,10 +132,8 @@ class _HomeScreenState extends State<HomeScreen> {
               setState(() {});
             },
           ),
-
           IconButton(
-            icon: const Icon(Icons.receipt_long),
-            tooltip: 'My Orders',
+            icon: const Icon(Icons.receipt_long_outlined),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -142,12 +142,9 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
-
-
           if (_userRole == 'admin')
             IconButton(
-              icon: const Icon(Icons.admin_panel_settings),
-              tooltip: 'Admin Panel',
+              icon: const Icon(Icons.admin_panel_settings_outlined),
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -158,7 +155,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           IconButton(
             icon: const Icon(Icons.person_outline),
-            tooltip: 'Profile',
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -168,16 +164,18 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
         ],
-
       ),
 
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Category Filter
+            Container(
+              height: 50,
+              margin: const EdgeInsets.symmetric(vertical: 10),
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
                 children: [
                   _buildCategoryChip('All'),
                   const SizedBox(width: 8),
@@ -191,121 +189,118 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-          ),
 
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Price Range: ₱${_priceRange.start.round()} - ₱${_priceRange.end.round()}',
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
-                ),
-                RangeSlider(
-                  values: _priceRange,
-                  min: _minPrice,
-                  max: _maxPrice,
-                  divisions: 100,
-                  labels: RangeLabels(
-                    '₱${_priceRange.start.round()}',
-                    '₱${_priceRange.end.round()}',
+            // Price Filter
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Price: ₱${_priceRange.start.round()} - ₱${_priceRange.end.round()}',
+                    style: theme.textTheme.bodyMedium!
+                        .copyWith(fontWeight: FontWeight.bold),
                   ),
-                  onChanged: (RangeValues newValues) {
-                    setState(() {
-                      _priceRange = RangeValues(
-                        newValues.start.roundToDouble(),
-                        newValues.end.roundToDouble(),
-                      );
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
-
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-
-              stream: _firestore
-                  .collection('products')
-                  .where(
-                'category',
-                isEqualTo: _selectedCategory == 'All'
-                    ? null
-                    : _selectedCategory,
-              )
-                  .where('price', isGreaterThanOrEqualTo: _priceRange.start)
-                  .where('price', isLessThanOrEqualTo: _priceRange.end)
-                  .orderBy('price', descending: false)
-                  .snapshots(),
-
-
-              builder: (context, snapshot) {
-
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
-
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'No products found based on the selected filters.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                  RangeSlider(
+                    values: _priceRange,
+                    min: _minPrice,
+                    max: _maxPrice,
+                    divisions: 100,
+                    labels: RangeLabels(
+                      '₱${_priceRange.start.round()}',
+                      '₱${_priceRange.end.round()}',
                     ),
-                  );
-                }
-
-                final products = snapshot.data!.docs;
-
-                return GridView.builder(
-                  padding: const EdgeInsets.all(10.0),
-
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 1 / 1.4,
-                  ),
-
-                  itemCount: products.length,
-                  itemBuilder: (context, index) {
-                    final productDoc = products[index];
-                    final productData = productDoc.data() as Map<String, dynamic>;
-
-                    return ProductCard(
-                      productId: productDoc.id,
-                      productName: productData['name'],
-                      price: productData['price'],
-                      imageUrl: productData['imageUrl'],
-
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => ProductDetailScreen(
-                              productData: productData,
-                              productId: productDoc.id,
-                            ),
-                          ),
+                    activeColor: theme.colorScheme.primary,
+                    onChanged: (RangeValues newValues) {
+                      setState(() {
+                        _priceRange = RangeValues(
+                          newValues.start.roundToDouble(),
+                          newValues.end.roundToDouble(),
                         );
-                      },
-                    );
-                  },
-                );
-              },
+                      });
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+
+            // Products Grid
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: _firestore
+                    .collection('products')
+                    .where(
+                  'category',
+                  isEqualTo:
+                  _selectedCategory == 'All' ? null : _selectedCategory,
+                )
+                    .where('price', isGreaterThanOrEqualTo: _priceRange.start)
+                    .where('price', isLessThanOrEqualTo: _priceRange.end)
+                    .orderBy('price', descending: false)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  }
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'No products found.',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    );
+                  }
+
+                  final products = snapshot.data!.docs;
+
+                  return GridView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 0.7,
+                    ),
+                    itemCount: products.length,
+                    itemBuilder: (context, index) {
+                      final productDoc = products[index];
+                      final productData = productDoc.data() as Map<String, dynamic>;
+
+                      return ProductCard(
+                        productId: productDoc.id,
+                        productName: productData['name'],
+                        price: productData['price'],
+                        imageUrl: productData['imageUrl'],
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => ProductDetailScreen(
+                                productData: productData,
+                                productId: productDoc.id,
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
 
+      // Floating Chat Button
       floatingActionButton: _userRole == 'user'
           ? StreamBuilder<DocumentSnapshot>(
-        stream: _firestore.collection('chats').doc(_currentUser!.uid).snapshots(),
+        stream: _firestore
+            .collection('chats')
+            .doc(_currentUser!.uid)
+            .snapshots(),
         builder: (context, snapshot) {
           int unreadCount = 0;
           if (snapshot.hasData && snapshot.data!.exists) {
@@ -317,7 +312,7 @@ class _HomeScreenState extends State<HomeScreen> {
             label: Text('$unreadCount'),
             isLabelVisible: unreadCount > 0,
             child: FloatingActionButton.extended(
-              icon: const Icon(Icons.support_agent),
+              icon: const Icon(Icons.support_agent_outlined),
               label: const Text('Contact Admin'),
               onPressed: () {
                 Navigator.of(context).push(
