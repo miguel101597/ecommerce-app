@@ -13,12 +13,6 @@ import 'package:ecommerce_app/widgets/notification_icon.dart';
 import 'package:ecommerce_app/screens/chat_screen.dart';
 import 'package:ecommerce_app/screens/wishlist_screen.dart';
 
-
-const Color cozyBurntOrange = Color(0xFFD84315);
-const Color cozyAmber = Color(0xFFFFC107);
-const Color cozyCoffee = Color(0xFF4E342E);
-const Color cozyBrick = Color(0xFF8D6E63);
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -73,13 +67,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildCategoryChip(String category) {
+    final theme = Theme.of(context);
     final isSelected = _selectedCategory == category;
     return ChoiceChip(
       label: Text(category),
       selected: isSelected,
-      selectedColor: cozyAmber.withOpacity(0.4),
+      selectedColor: theme.colorScheme.secondary.withOpacity(0.4),
       labelStyle: TextStyle(
-        color: isSelected ? cozyBurntOrange : cozyCoffee,
+        color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       onSelected: (selected) {
@@ -205,7 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Text(
                   'Price Range: ₱${_priceRange.start.round()} - ₱${_priceRange.end.round()}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: cozyCoffee),
+                  style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
                 ),
                 RangeSlider(
                   values: _priceRange,
@@ -261,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Text(
                       'No products found based on the selected filters.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: cozyCoffee),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                     ),
                   );
                 }
