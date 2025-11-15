@@ -26,6 +26,14 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // Helper for focused border
+  OutlineInputBorder _buildBorder(Color color) {
+    return OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: color, width: 2),
+    );
+  }
+
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -108,9 +116,18 @@ class _LoginScreenState extends State<LoginScreen> {
                               decoration: InputDecoration(
                                 labelText: 'Email',
                                 labelStyle: TextStyle(color: colorScheme.onSurface),
-                                hintText: 'Enter your email',
-                                hintStyle: TextStyle(color: colorScheme.outline),
+                                filled: true,
+                                fillColor: colorScheme.surfaceVariant.withOpacity(0.05),
                                 prefixIcon: Icon(Icons.email, color: colorScheme.primary),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                focusedBorder: _buildBorder(colorScheme.primary),
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) return 'Enter email';
@@ -127,8 +144,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               decoration: InputDecoration(
                                 labelText: 'Password',
                                 labelStyle: TextStyle(color: colorScheme.onSurface),
-                                hintText: 'Enter your password',
-                                hintStyle: TextStyle(color: colorScheme.outline),
+                                filled: true,
+                                fillColor: colorScheme.surfaceVariant.withOpacity(0.05),
                                 prefixIcon: Icon(Icons.lock, color: colorScheme.primary),
                                 suffixIcon: IconButton(
                                   icon: Icon(
@@ -137,6 +154,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   onPressed: () => setState(() => _obscureText = !_obscureText),
                                 ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                focusedBorder: _buildBorder(colorScheme.primary),
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) return 'Enter password';
