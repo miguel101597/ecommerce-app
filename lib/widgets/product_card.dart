@@ -1,83 +1,87 @@
 import 'package:flutter/material.dart';
+import 'package:ecommerce_app/widgets/wishlist_button.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-// 1. This is a simple StatelessWidget
 class ProductCard extends StatelessWidget {
-  
-  // 2. We'll require the data we need to display
+  final String productId;
   final String productName;
   final double price;
   final String imageUrl;
-  final VoidCallback onTap; // 1. ADD THIS LINE
+  final VoidCallback onTap;
 
-  // 3. The constructor takes this data
   const ProductCard({
     super.key,
+    required this.productId,
     required this.productName,
     required this.price,
     required this.imageUrl,
-    required this.onTap, // 2. ADD THIS TO THE CONSTRUCTOR
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    // 1. The Card will get its style from our new 'cardTheme'
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Card(
-        // 2. The theme's 'clipBehavior' will handle the clipping
+        clipBehavior: Clip.hardEdge,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 3. This Expanded makes the image take up most of the space
             Expanded(
-              flex: 3, // Give the image 3 "parts" of the space
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.cover, // This makes the image fill its box
+              flex: 3,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return const Center(child: CircularProgressIndicator());
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Center(
+                          child: Icon(Icons.broken_image,
+                              size: 40, color: Colors.grey),
+                        );
+                      },
+                    ),
+                  ),
 
-                // Show a loading spinner
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return const Center(child: CircularProgressIndicator());
-                },
-
-                // Show an error icon
-                errorBuilder: (context, error, stackTrace) {
-                  return const Center(
-                    child: Icon(Icons.broken_image, size: 40, color: Colors.grey),
-                  );
-                },
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: WishlistButton(productId: productId),
+                  ),
+                ],
               ),
             ),
 
-            // 4. This Expanded holds the text
             Expanded(
-              flex: 2, // Give the text 2 "parts" of the space
+              flex: 2,
               child: Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Product Name
                     Text(
                       productName,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
-                      maxLines: 2, // Allow two lines for the name
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const Spacer(), // 5. Pushes the price to the bottom
 
-                    // Price
                     Text(
                       '₱${price.toStringAsFixed(2)}',
-                      style: TextStyle(
+                      style: GoogleFonts.notoSans(
                         fontSize: 15,
                         color: Colors.grey[800],
-                        fontWeight: FontWeight.bold
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],

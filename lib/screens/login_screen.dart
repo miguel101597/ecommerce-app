@@ -1,8 +1,7 @@
-import 'package:ecommerce_app/screens/signup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:ecommerce_app/screens/signup_screen.dart';
 
-// 1. Create a StatefulWidget
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -10,23 +9,16 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-// 2. This is the State class
 class _LoginScreenState extends State<LoginScreen> {
-
-  // 3. Create a GlobalKey for the Form
   final _formKey = GlobalKey<FormState>();
-
-  // 2. Add a loading state variable
-  bool _isLoading = false;
-
-  // 3. Get an instance of FirebaseAuth
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // 4. Create TextEditingControllers
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  // 5. Clean up controllers when the widget is removed
+  bool _isLoading = false;
+  bool _obscureText = true;
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -35,154 +27,171 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
-    // 1. Check if the form is valid
-    if (!_formKey.currentState!.validate()) {
-      return; // If not valid, stop here
-    }
+    if (!_formKey.currentState!.validate()) return;
 
-    // 2. Set loading to true
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     try {
-      // 3. This is the Firebase command to sign in
       await _auth.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-      
-      // 4. If login is successful, the AuthWrapper's stream
-      //    will auto-navigate to HomeScreen. We don't need to do it here.
-
     } on FirebaseAuthException catch (e) {
-      // 5. This 'catch' block handles Firebase-specific errors
       String message = 'An error occurred';
-      if (e.code == 'user-not-found') {
-        message = 'No user found for that email.';
-      } else if (e.code == 'wrong-password') {
-        message = 'Wrong password provided.';
-      }
-      
-      // 6. Show the error message in a SnackBar
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } catch (e) {
-      // 7. Catch any other general errors
-      print(e);
-    }
+      if (e.code == 'user-not-found') message = 'No user found for that email.';
+      if (e.code == 'wrong-password') message = 'Wrong password provided.';
 
-    // 8. ALWAYS set loading to false at the end
-    if (mounted) { // Check if the widget is still on screen
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // 1. A Scaffold provides the basic screen structure
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login'),
-      ),
-      // 2. SingleChildScrollView prevents the keyboard from
-      //    causing a "pixel overflow" error
-      body: SingleChildScrollView(
-        child: Padding(
-          // 3. Add padding around the form
-          padding: const EdgeInsets.all(16.0),
-          // 4. The Form widget acts as a container for our fields
-          child: Form(
-            key: _formKey, // 5. Assign our key to the Form
-            // 6. A Column arranges its children vertically
-            child: Column(
-              // 7. Center the contents of the column
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(height: 20),
-
-                // 2. The Email Text Field
-                TextFormField(
-                  controller: _emailController,
-                  // 3. Link the controller
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(), // 4. Nice border
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  // 5. Show '@' on keyboard
-                  // 6. Validator function
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    if (!value.contains('@')) {
-                      return 'Please enter a valid email';
-                    }
-                    return null; // 'null' means the input is valid
-                  },
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              colorScheme.background,
+              colorScheme.background.withOpacity(0.9)
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Card(
+                elevation: 12,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
                 ),
-
-                const SizedBox(height: 16),
-
-                TextFormField(
-                  controller: _passwordController, // 9. Link the controller
-                  obscureText: true, // 10. This hides the password
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(),
-                  ),
-                  // 11. Validator function
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
-                ),
-
-                const SizedBox(height: 20),
-
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(50), // 3. Make it wide
-                  ),
-                  // 4. onPressed is the click handler
-                  onPressed: _login,
-                  // 2. Show a spinner OR text based on _isLoading
-                  child: _isLoading
-                      ? const CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        )
-                      : const Text('Login'),
-                ),
-
-                // 6. A spacer
-                const SizedBox(height: 10),
-
-                // 7. The "Sign Up" toggle button
-                TextButton(
-                  onPressed: () {
-                    // 8. Navigate to the Sign Up screen
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (context) => const SignUpScreen(),
+                color: colorScheme.surface,
+                shadowColor: theme.shadowColor ?? Colors.black26,
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset('assets/images/app_logo.png', height: 80),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Welcome Back!',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onBackground,
+                        ),
                       ),
-                    );
-                  },
-                  child: const Text("Don't have an account? Sign Up"),
+                      const SizedBox(height: 24),
+                      Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            // EMAIL FIELD
+                            TextFormField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              style: TextStyle(color: colorScheme.onSurface),
+                              decoration: InputDecoration(
+                                labelText: 'Email',
+                                labelStyle: TextStyle(color: colorScheme.onSurface),
+                                hintText: 'Enter your email',
+                                hintStyle: TextStyle(color: colorScheme.outline),
+                                prefixIcon: Icon(Icons.email, color: colorScheme.primary),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) return 'Enter email';
+                                if (!value.contains('@')) return 'Enter valid email';
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            // PASSWORD FIELD
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: _obscureText,
+                              style: TextStyle(color: colorScheme.onSurface),
+                              decoration: InputDecoration(
+                                labelText: 'Password',
+                                labelStyle: TextStyle(color: colorScheme.onSurface),
+                                hintText: 'Enter your password',
+                                hintStyle: TextStyle(color: colorScheme.outline),
+                                prefixIcon: Icon(Icons.lock, color: colorScheme.primary),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscureText ? Icons.visibility : Icons.visibility_off,
+                                    color: colorScheme.primary,
+                                  ),
+                                  onPressed: () => setState(() => _obscureText = !_obscureText),
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) return 'Enter password';
+                                if (value.length < 6) return 'Min 6 chars';
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 24),
+                            // LOGIN BUTTON
+                            SizedBox(
+                              width: double.infinity,
+                              height: 50,
+                              child: ElevatedButton(
+                                onPressed: _isLoading ? null : _login,
+                                style: ButtonStyle(
+                                  backgroundColor: MaterialStateProperty.resolveWith((states) {
+                                    if (states.contains(MaterialState.hovered)) {
+                                      return colorScheme.primary.withOpacity(0.9);
+                                    }
+                                    return colorScheme.primary;
+                                  }),
+                                  foregroundColor: MaterialStateProperty.all(colorScheme.onPrimary),
+                                  overlayColor: MaterialStateProperty.all(colorScheme.primary.withOpacity(0.1)),
+                                  shape: MaterialStateProperty.all(
+                                    RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  ),
+                                  elevation: MaterialStateProperty.all(2),
+                                ),
+                                child: _isLoading
+                                    ? CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation(colorScheme.onPrimary),
+                                )
+                                    : const Text('Login'),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            // SIGNUP LINK
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                foregroundColor: colorScheme.onSurface.withOpacity(0.8),
+                              ),
+                              child: const Text("Don't have an account? Sign Up"),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-
-              ],
+              ),
             ),
           ),
         ),
@@ -190,4 +199,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
