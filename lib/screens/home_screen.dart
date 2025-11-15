@@ -108,6 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 label: Text(cart.itemCount.toString()),
                 isLabelVisible: cart.itemCount > 0,
                 child: IconButton(
+                  tooltip: 'Cart',
                   icon: const Icon(Icons.shopping_cart_outlined),
                   onPressed: () {
                     Navigator.of(context).push(
@@ -120,8 +121,9 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
-          const NotificationIcon(),
+          const NotificationIcon(), // Assuming this already has its own tooltip if needed
           IconButton(
+            tooltip: 'Wishlist',
             icon: const Icon(Icons.favorite_border),
             onPressed: () async {
               await Navigator.of(context).push(
@@ -133,6 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           IconButton(
+            tooltip: 'My Orders',
             icon: const Icon(Icons.receipt_long_outlined),
             onPressed: () {
               Navigator.of(context).push(
@@ -144,6 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           if (_userRole == 'admin')
             IconButton(
+              tooltip: 'Admin Panel',
               icon: const Icon(Icons.admin_panel_settings_outlined),
               onPressed: () {
                 Navigator.of(context).push(
@@ -154,6 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
           IconButton(
+            tooltip: 'Profile',
             icon: const Icon(Icons.person_outline),
             onPressed: () {
               Navigator.of(context).push(
@@ -169,10 +174,43 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Category Filter
+            // Header
             Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withOpacity(0.1),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Hi, ${_currentUser?.displayName ?? 'User'} 👋',
+                    style: theme.textTheme.headlineSmall!.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Find the perfect lighting for your home',
+                    style: theme.textTheme.bodyMedium!.copyWith(
+                      color: theme.colorScheme.onPrimary.withOpacity(0.8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // --- CATEGORY CHIPS ---
+            SizedBox(
               height: 50,
-              margin: const EdgeInsets.symmetric(vertical: 10),
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -190,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // Price Filter
+            // --- PRICE FILTER ---
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
@@ -198,8 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Text(
                     'Price: ₱${_priceRange.start.round()} - ₱${_priceRange.end.round()}',
-                    style: theme.textTheme.bodyMedium!
-                        .copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.bold),
                   ),
                   RangeSlider(
                     values: _priceRange,
@@ -211,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       '₱${_priceRange.end.round()}',
                     ),
                     activeColor: theme.colorScheme.primary,
-                    onChanged: (RangeValues newValues) {
+                    onChanged: (newValues) {
                       setState(() {
                         _priceRange = RangeValues(
                           newValues.start.roundToDouble(),
@@ -224,72 +261,70 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // Products Grid
-            Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: _firestore
-                    .collection('products')
-                    .where(
-                  'category',
-                  isEqualTo:
-                  _selectedCategory == 'All' ? null : _selectedCategory,
-                )
-                    .where('price', isGreaterThanOrEqualTo: _priceRange.start)
-                    .where('price', isLessThanOrEqualTo: _priceRange.end)
-                    .orderBy('price', descending: false)
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  }
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return Center(
-                      child: Text(
-                        'No products found.',
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                    );
-                  }
+          // --- PRODUCTS GRID ---
+          Expanded(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: _firestore
+                .collection('products')
+                .where('category', isEqualTo: _selectedCategory == 'All' ? null : _selectedCategory)
+                .where('price', isGreaterThanOrEqualTo: _priceRange.start)
+                .where('price', isLessThanOrEqualTo: _priceRange.end)
+                .orderBy('price')
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(
+                    child: Text('Error: ${snapshot.error}',
+                        style: theme.textTheme.bodyMedium));
+              }
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return Center(
+                  child: Text(
+                      'No products found.', style: theme.textTheme.bodyMedium),
+                );
+              }
 
-                  final products = snapshot.data!.docs;
+              final products = snapshot.data!.docs;
 
-                  return GridView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 0.7,
-                    ),
-                    itemCount: products.length,
-                    itemBuilder: (context, index) {
-                      final productDoc = products[index];
-                      final productData = productDoc.data() as Map<String, dynamic>;
+              return GridView.builder(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 10),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 0.7,
+                ),
+                itemCount: products.length,
+                itemBuilder: (context, index) {
+                  final productDoc = products[index];
+                  final productData = productDoc.data() as Map<String, dynamic>;
 
-                      return ProductCard(
-                        productId: productDoc.id,
-                        productName: productData['name'],
-                        price: productData['price'],
-                        imageUrl: productData['imageUrl'],
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => ProductDetailScreen(
+                  return ProductCard(
+                    productId: productDoc.id,
+                    productName: productData['name'],
+                    price: productData['price'],
+                    imageUrl: productData['imageUrl'],
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              ProductDetailScreen(
                                 productData: productData,
                                 productId: productDoc.id,
                               ),
-                            ),
-                          );
-                        },
+                        ),
                       );
                     },
                   );
                 },
-              ),
-            ),
+              );
+            },
+          ),
+          ),
           ],
         ),
       ),
@@ -297,10 +332,7 @@ class _HomeScreenState extends State<HomeScreen> {
       // Floating Chat Button
       floatingActionButton: _userRole == 'user'
           ? StreamBuilder<DocumentSnapshot>(
-        stream: _firestore
-            .collection('chats')
-            .doc(_currentUser!.uid)
-            .snapshots(),
+        stream: _firestore.collection('chats').doc(_currentUser!.uid).snapshots(),
         builder: (context, snapshot) {
           int unreadCount = 0;
           if (snapshot.hasData && snapshot.data!.exists) {
@@ -312,6 +344,7 @@ class _HomeScreenState extends State<HomeScreen> {
             label: Text('$unreadCount'),
             isLabelVisible: unreadCount > 0,
             child: FloatingActionButton.extended(
+              tooltip: 'Contact Admin',
               icon: const Icon(Icons.support_agent_outlined),
               label: const Text('Contact Admin'),
               onPressed: () {
