@@ -56,6 +56,7 @@ class CartProvider with ChangeNotifier {
   // 6. ADD THESE: Get Firebase instances
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final User? _currentUser = FirebaseAuth.instance.currentUser;
 
   // 3. A public "getter" to let widgets *read* the list of items
   List<CartItem> get items => _items;
@@ -206,6 +207,7 @@ class CartProvider with ChangeNotifier {
       // 2. Update the data we save to Firestore
       await _firestore.collection('orders').add({
         'userId': _userId,
+        'email': _currentUser?.email,
         'items': cartData,
         'subtotal': sub,       // 3. ADD THIS
         'vat': v,            // 4. ADD THIS
