@@ -11,19 +11,25 @@ class WishlistScreen extends StatefulWidget {
 }
 
 class _WishlistScreenState extends State<WishlistScreen> {
-
-  Future<void> _removeNonExistentProduct(CollectionReference wishlistRef, String productId) async {
+  Future<void> _removeNonExistentProduct(
+      CollectionReference wishlistRef, String productId) async {
     await Future.delayed(Duration.zero);
     await wishlistRef.doc(productId).delete();
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      return const Scaffold(
-        body: Center(child: Text('Please log in to view your wishlist.')),
+      return Scaffold(
+        body: Center(
+          child: Text(
+            'Please log in to view your wishlist.',
+            style: theme.textTheme.bodyLarge,
+          ),
+        ),
       );
     }
 
@@ -34,8 +40,10 @@ class _WishlistScreenState extends State<WishlistScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Wishlist ❤️'),
+        title: Text('My Wishlist ❤️', style: theme.appBarTheme.titleTextStyle),
         centerTitle: true,
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        elevation: 0,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: wishlistRef.snapshots(),
@@ -45,10 +53,11 @@ class _WishlistScreenState extends State<WishlistScreen> {
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
                 'Your wishlist is empty.',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                style: theme.textTheme.bodyMedium!
+                    .copyWith(color: theme.colorScheme.onSurface.withOpacity(0.6)),
               ),
             );
           }
@@ -67,36 +76,52 @@ class _WishlistScreenState extends State<WishlistScreen> {
                     .doc(productId)
                     .get(),
                 builder: (context, productSnapshot) {
-                  if (!productSnapshot.hasData) {
-                    return const SizedBox.shrink();
-                  }
+                  if (!productSnapshot.hasData) return const SizedBox.shrink();
 
                   if (!productSnapshot.data!.exists) {
                     _removeNonExistentProduct(wishlistRef, productId);
-
                     return const SizedBox.shrink();
                   }
 
-                  final productData = productSnapshot.data!.data() as Map<String, dynamic>;
+                  final productData =
+                  productSnapshot.data!.data() as Map<String, dynamic>;
 
                   return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                    margin:
+                    const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 2,
                     child: ListTile(
-                      leading: Image.network(
-                        productData['imageUrl'],
-                        width: 60,
-                        height: 60,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.broken_image, size: 40, color: Colors.grey),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          productData['imageUrl'],
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Icon(Icons.broken_image,
+                                  size: 40,
+                                  color:
+                                  theme.colorScheme.onSurface.withOpacity(0.3)),
+                        ),
                       ),
                       title: Text(
                         productData['name'],
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.bodyLarge!
+                            .copyWith(fontWeight: FontWeight.bold),
                       ),
-                      subtitle: Text('₱${productData['price'].toStringAsFixed(2)}'),
+                      subtitle: Text(
+                        '₱${productData['price'].toStringAsFixed(2)}',
+                        style: theme.textTheme.bodyMedium,
+                      ),
                       trailing: IconButton(
-                        icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                        icon: Icon(Icons.delete_outline,
+                            color: theme.colorScheme.error),
                         onPressed: () async {
                           await wishlistRef.doc(productId).delete();
                         },
