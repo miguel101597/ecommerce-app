@@ -65,6 +65,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -100,6 +101,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     obscureText: true,
                     decoration: InputDecoration(
                       labelText: 'New Password',
+                      labelStyle: TextStyle(color: colorScheme.onSurface),
                       filled: true,
                       fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.05),
                       border: OutlineInputBorder(
@@ -119,6 +121,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     obscureText: true,
                     decoration: InputDecoration(
                       labelText: 'Confirm Password',
+                      labelStyle: TextStyle(color: colorScheme.onSurface),
                       filled: true,
                       fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.05),
                       border: OutlineInputBorder(

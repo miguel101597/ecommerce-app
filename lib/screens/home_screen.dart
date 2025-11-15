@@ -189,17 +189,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Hi, ${_currentUser?.displayName ?? 'User'} 👋',
+                    'Hi, ${_currentUser?.email ?? 'User'} 👋',
                     style: theme.textTheme.headlineSmall!.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onPrimary,
+                      color: theme.colorScheme.onBackground, // more consistent with standard text
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Find the perfect lighting for your home',
                     style: theme.textTheme.bodyMedium!.copyWith(
-                      color: theme.colorScheme.onPrimary.withOpacity(0.8),
+                      color: theme.colorScheme.onBackground.withOpacity(0.8), // softer secondary text
                     ),
                   ),
                 ],

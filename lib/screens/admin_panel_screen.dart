@@ -69,6 +69,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     Widget buildFullWidthButton({
       required IconData icon,
@@ -147,58 +148,182 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               key: _formKey,
               child: Column(
                 children: [
+                  // Category
                   TextFormField(
                     controller: _categoryController,
-                    decoration: const InputDecoration(labelText: 'Category (e.g., Table Lamp)'),
+                    style: TextStyle(color: colorScheme.onSurface),
+                    decoration: InputDecoration(
+                      labelText: 'Category (e.g., Table Lamp)',
+                      labelStyle: TextStyle(color: colorScheme.onSurface),
+                      hintText: 'Enter category',
+                      hintStyle: TextStyle(color: colorScheme.outline),
+                      filled: true,
+                      fillColor: colorScheme.surfaceVariant.withOpacity(0.05),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: colorScheme.brightness == Brightness.dark
+                              ? colorScheme.outline
+                              : Colors.transparent,
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: colorScheme.primary,
+                          width: 2,
+                        ),
+                      ),
+                      disabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: colorScheme.onSurface.withOpacity(0.12),
+                          width: 1,
+                        ),
+                      ),
+                    ),
                     validator: (value) =>
                     value == null || value.isEmpty ? 'Please enter a category' : null,
                   ),
                   const SizedBox(height: 16),
 
+                  // Image URL
                   TextFormField(
                     controller: _imageUrlController,
-                    decoration: const InputDecoration(labelText: 'Image URL'),
+                    style: TextStyle(color: colorScheme.onSurface),
                     keyboardType: TextInputType.url,
+                    decoration: InputDecoration(
+                      labelText: 'Image URL',
+                      labelStyle: TextStyle(color: colorScheme.onSurface),
+                      hintText: 'Enter image URL',
+                      hintStyle: TextStyle(color: colorScheme.outline),
+                      filled: true,
+                      fillColor: colorScheme.surfaceVariant.withOpacity(0.05),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: colorScheme.brightness == Brightness.dark
+                              ? colorScheme.outline
+                              : Colors.transparent,
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: colorScheme.primary,
+                          width: 2,
+                        ),
+                      ),
+                    ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter an image URL';
-                      }
-                      if (!value.startsWith('http')) {
-                        return 'Please enter a valid URL';
-                      }
+                      if (value == null || value.isEmpty) return 'Please enter an image URL';
+                      if (!value.startsWith('http')) return 'Enter a valid URL';
                       return null;
                     },
                   ),
                   const SizedBox(height: 16),
 
+                  // Product Name
                   TextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Product Name'),
+                    style: TextStyle(color: colorScheme.onSurface),
+                    decoration: InputDecoration(
+                      labelText: 'Product Name',
+                      labelStyle: TextStyle(color: colorScheme.onSurface),
+                      hintText: 'Enter product name',
+                      hintStyle: TextStyle(color: colorScheme.outline),
+                      filled: true,
+                      fillColor: colorScheme.surfaceVariant.withOpacity(0.05),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: colorScheme.brightness == Brightness.dark
+                              ? colorScheme.outline
+                              : Colors.transparent,
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: colorScheme.primary,
+                          width: 2,
+                        ),
+                      ),
+                    ),
                     validator: (value) =>
-                    value!.isEmpty ? 'Please enter a name' : null,
+                    value == null || value.isEmpty ? 'Please enter a name' : null,
                   ),
                   const SizedBox(height: 16),
 
+                  // Description
                   TextFormField(
                     controller: _descriptionController,
-                    decoration: const InputDecoration(labelText: 'Description'),
+                    style: TextStyle(color: colorScheme.onSurface),
                     maxLines: 3,
+                    decoration: InputDecoration(
+                      labelText: 'Description',
+                      labelStyle: TextStyle(color: colorScheme.onSurface),
+                      hintText: 'Enter product description',
+                      hintStyle: TextStyle(color: colorScheme.outline),
+                      filled: true,
+                      fillColor: colorScheme.surfaceVariant.withOpacity(0.05),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: colorScheme.brightness == Brightness.dark
+                              ? colorScheme.outline
+                              : Colors.transparent,
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: colorScheme.primary,
+                          width: 2,
+                        ),
+                      ),
+                    ),
                     validator: (value) =>
-                    value!.isEmpty ? 'Please enter a description' : null,
+                    value == null || value.isEmpty ? 'Please enter a description' : null,
                   ),
                   const SizedBox(height: 16),
 
+                  // Price
                   TextFormField(
                     controller: _priceController,
-                    decoration: const InputDecoration(labelText: 'Price'),
+                    style: TextStyle(color: colorScheme.onSurface),
                     keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Price',
+                      labelStyle: TextStyle(color: colorScheme.onSurface),
+                      hintText: 'Enter product price',
+                      hintStyle: TextStyle(color: colorScheme.outline),
+                      filled: true,
+                      fillColor: colorScheme.surfaceVariant.withOpacity(0.05),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: colorScheme.brightness == Brightness.dark
+                              ? colorScheme.outline
+                              : Colors.transparent,
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: colorScheme.primary,
+                          width: 2,
+                        ),
+                      ),
+                    ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a price';
-                      }
-                      if (double.tryParse(value) == null) {
-                        return 'Please enter a valid number';
-                      }
+                      if (value == null || value.isEmpty) return 'Please enter a price';
+                      if (double.tryParse(value) == null) return 'Enter a valid number';
                       return null;
                     },
                   ),
